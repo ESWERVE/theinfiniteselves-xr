@@ -84,6 +84,31 @@
     window.__TIS_ROOM = 'void';
 
     
+AFRAME.registerShader('gradient', {
+  schema: {
+    topColor:    { type: 'color', is: 'uniform', default: '#1A0B3D' },
+    bottomColor: { type: 'color', is: 'uniform', default: '#05020A' }
+  },
+  vertexShader: `
+    varying vec3 vWorldPosition;
+    void main() {
+      vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+      vWorldPosition = worldPosition.xyz;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 topColor;
+    uniform vec3 bottomColor;
+    varying vec3 vWorldPosition;
+    void main() {
+      float h = normalize(vWorldPosition + vec3(0.0, 20.0, 0.0)).y;
+      float t = clamp(h * 0.5 + 0.5, 0.0, 1.0);
+      vec3 col = mix(bottomColor, topColor, t);
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `
+});
 
 
 
@@ -282,7 +307,8 @@
 
 
 
-      <a-sky color="#04000a"></a-sky>
+      <a-sky color="#05020A" material="shader: gradient; topColor: #1A0B3D; bottomColor: #05020A;"></a-sky>
+
 
       <!-- Brand marker inside the void -->
       <a-entity id="brand" position="0 2.2 -6">
@@ -369,6 +395,7 @@
         <a-text value="DESTINATIONS" position="0 2.2 -34" align="center" width="10" color="#ffffff"
           material="emissive:#b35cff; emissiveIntensity:1.8"></a-text>
         <a-text value="(Coming Next)" position="0 1.55 -34" align="center" width="8" color="#d9ccff" opacity="0.78"></a-text>
+
 
 
         <!-- Audio anchor: best practice is hosting audio inside your Netlify folder -->
