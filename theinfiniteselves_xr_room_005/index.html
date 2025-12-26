@@ -83,50 +83,8 @@
     // Global room state used by locomotion + switcher
     window.__TIS_ROOM = 'void';
 
-    AFRAME.registerComponent('starfield-spheres', {
-  schema: {
-    count: { type: 'int', default: 800 },
-    radius: { type: 'number', default: 90 }
-  },
-
-  init: function () {
-    this.stars = [];
-    const root = this.el;
-    const count = this.data.count;
-    const R = this.data.radius;
-
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = R * (0.3 + Math.random() * 0.7);
-
-      const x = r * Math.sin(phi) * Math.cos(theta);
-      const y = r * Math.cos(phi);
-      const z = r * Math.sin(phi) * Math.sin(theta);
-
-      const s = document.createElement('a-sphere');
-      const size = 0.01 + Math.random() * 0.04;
-
-      const pick = Math.random();
-      let color = '#ffffff';
-      if (pick < 0.6) color = '#ffffff';
-      else if (pick < 0.8) color = '#d9ccff';
-      else color = '#7b5cff';
-
-      s.setAttribute('radius', size);
-      s.setAttribute('position', `${x} ${y} ${z}`);
-      s.setAttribute('material', `shader: standard; color:${color}; emissive:${color}; emissiveIntensity:${0.5 + Math.random()}`);
-
-      root.appendChild(s);
-
-      this.stars.push({
-        el: s,
-        base: new THREE.Vector3(x, y, z),
-        speed: 0.2 + Math.random() * 0.8,
-        twinkle: 0.3 + Math.random() * 1.5,
-        phase: Math.random() * Math.PI * 2
-      });
-    }
+   
+    }  
   },
 
   tick: function (time) {
@@ -439,6 +397,11 @@
           material="emissive:#b35cff; emissiveIntensity:1.8"></a-text>
         <a-text value="(Coming Next)" position="0 1.55 -34" align="center" width="8" color="#d9ccff" opacity="0.78"></a-text>
 
+        <!-- Lobby stardust (very light) -->
+        <a-entity position="0 3.6 -34" animation="property: rotation; to: 0 -360 0; dur: 160000; easing: linear; loop: true">
+          <a-entity starfield-spheres="count: 180; radius: 9"></a-entity>
+        </a-entity>
+        
         <!-- Audio anchor: best practice is hosting audio inside your Netlify folder -->
         <!-- Put a file named audio.mp3 in this same folder and it will work as: src="audio.mp3" -->
         <a-entity position="0 2.2 -34">
