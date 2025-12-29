@@ -83,72 +83,49 @@
     // Global room state used by locomotion + switcher
     window.__TIS_ROOM = 'void';
 
-    AFRAME.registerComponent('starfield-spheres', {
-  schema: {
-    count: { type: 'int', default: 800 },
-    radius: { type: 'number', default: 90 }
-  },
-
+    
+    // -----------------------------
+// Starfield component (FROM 001)
+// -----------------------------
+AFRAME.registerComponent('starfield', {
+  schema: { count: {default: 1500}, radius: {default: 80} },
   init: function () {
-    this.stars = [];
-    const root = this.el;
+    const el = this.el;
     const count = this.data.count;
-    const R = this.data.radius;
+    const radius = this.data.radius;
+
+    const geom = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = R * (0.3 + Math.random() * 0.7);
-
+      // random points inside sphere shell
+      const u = Math.random();
+      const v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi = Math.acos(2 * v - 1);
+      const r = radius * (0.65 + 0.35 * Math.random());
       const x = r * Math.sin(phi) * Math.cos(theta);
       const y = r * Math.cos(phi);
       const z = r * Math.sin(phi) * Math.sin(theta);
-
-      const s = document.createElement('a-sphere');
-      const size = 0.01 + Math.random() * 0.04;
-
-      const pick = Math.random();
-      let color = '#ffffff';
-      if (pick < 0.6) color = '#ffffff';
-      else if (pick < 0.8) color = '#d9ccff';
-      else color = '#7b5cff';
-
-      s.setAttribute('radius', size);
-      s.setAttribute('position', `${x} ${y} ${z}`);
-      s.setAttribute('material', `shader: standard; color:${color}; emissive:${color}; emissiveIntensity:${0.5 + Math.random()}`);
-
-      root.appendChild(s);
-
-      this.stars.push({
-        el: s,
-        base: new THREE.Vector3(x, y, z),
-        speed: 0.2 + Math.random() * 0.8,
-        twinkle: 0.3 + Math.random() * 1.5,
-        phase: Math.random() * Math.PI * 2
-      });
+      positions[i * 3 + 0] = x;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = z;
     }
-  },
 
-  tick: function (time) {
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      size: 0.18,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.9
+    });
+    const points = new THREE.Points(geom, mat);
 
-  // time comes in as milliseconds already — convert once
-  const t = time * 0.001;
-
-  for (let s of this.stars) {
-
-    // slow independent twinkle only
-    const glow = 0.7 + Math.sin(t * s.twinkle * 0.4 + s.phase) * 0.3;
-    s.el.setAttribute('material', 'emissiveIntensity', glow);
-
-    // HARD lock position — no drift, no orbit, no wobble
-    s.el.object3D.position.set(
-      s.base.x,
-      s.base.y,
-      s.base.z
-    );
+    el.setObject3D('mesh', points);
   }
-}
-      });
+});
+
+
 
 
 
@@ -335,7 +312,6 @@
     background="color: #030007"
     renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
     vr-mode-ui="enabled: true"
-  
   >
 
     <!-- ROOM 1: THE VOID (visible at start) -->
@@ -345,9 +321,11 @@
       <a-entity light="type: point; intensity: 1.1; color: #6a6bff; distance: 90" position="12 10 8"></a-entity>
       <a-entity light="type: point; intensity: 0.7; color: #3b0a8f; distance: 120" position="0 -10 0"></a-entity>
 
-      <a-entity id="stars" starfield-spheres="count: 700; radius: 140"></a-entity>
+      <a-entity id="stars" position="0 0 0" starfield="count: 2500; radius: 120;"></a-entity>
 
-      <a-sky color="#04000a"></a-sky>
+      <a-sky color="#ff0000"></a-sky>
+
+
 
       <!-- Brand marker inside the void -->
       <a-entity id="brand" position="0 2.2 -6">
@@ -417,13 +395,6 @@
           <a-text value="Walk back through the ring to return to the Void." position="0 0.6 0.05" align="center" width="12" color="#b7a5ff" opacity="0.65"></a-text>
         </a-entity>
 
-        <!-- subtle “nebula bleed” panels (fake volumetric vibe via translucent layers) -->
-        <a-plane position="0 3.6 -42.95" width="17.4" height="6.8"
-          material="shader: standard; color: #1b0634; emissive: #ff7aff; emissiveIntensity: 0.06; opacity: 0.12; transparent: true"></a-plane>
-
-        <a-plane position="0 3.6 -42.85" width="16.2" height="6.0"
-          material="shader: standard; color: #0a1640; emissive: #6a6bff; emissiveIntensity: 0.06; opacity: 0.10; transparent: true"></a-plane>
-
         <!-- Central “decision plinth” (where future links/rooms will live) -->
         <a-cylinder position="0 0.45 -34" radius="1.05" height="0.9"
           material="shader: standard; color: #07030f; emissive: #2a0b4f; emissiveIntensity: 0.35; roughness: 0.9; metalness: 0.08"></a-cylinder>
@@ -434,6 +405,7 @@
         <a-text value="DESTINATIONS" position="0 2.2 -34" align="center" width="10" color="#ffffff"
           material="emissive:#b35cff; emissiveIntensity:1.8"></a-text>
         <a-text value="(Coming Next)" position="0 1.55 -34" align="center" width="8" color="#d9ccff" opacity="0.78"></a-text>
+
 
 
         <!-- Audio anchor: best practice is hosting audio inside your Netlify folder -->
